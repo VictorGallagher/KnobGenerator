@@ -287,6 +287,7 @@ class KnobGenerator(QtWidgets.QWidget):
         getattr(App.getDocument(docName),obj_name).setExpression('Radius', u'Sheet.'+ alias)
         return hole_shape
 
+
     def make_half_hole(self, knob, diameter, knob_height, shank_length):
         docName = App.ActiveDocument.Name
         obj_name = 'Hole'
@@ -298,16 +299,17 @@ class KnobGenerator(QtWidgets.QWidget):
         hole_shape.Radius = diameter/2
         hole_shape.Height = total_height
         hole_shape.Placement.Base = App.Vector(0, 0, (-total_height/2))
-        hole_shape = self.cut_parts(knob, hole_shape, 'Knob')
+
         self.line_number+=1
         alias = self.initialize_cell_link(self.spreadsheet, self.line_number, 'Hole Radius', str(diameter/2))
-        getattr(App.getDocument(docName),obj_name).setExpression('Radius', u'Sheet.'+ alias)
+        #getattr(App.getDocument(docName),obj_name).setExpression('Radius', u'Sheet.'+ alias)
+        hole_shape.setExpression('Radius', u'Sheet.'+ alias)
         self.line_number+=1
         alias = self.initialize_cell_link(self.spreadsheet, self.line_number, 'Hole Depth', str(total_height))
-        getattr(App.getDocument(docName),obj_name).setExpression('Height', u'Sheet.'+ alias)
-
+        #getattr(App.getDocument(docName),obj_name).setExpression('Height', u'Sheet.'+ alias)
+        hole_shape.setExpression('Height', u'Sheet.'+ alias)
+        hole_shape = self.cut_parts(knob, hole_shape, 'Knob')
         return hole_shape
-
 
     def make_shank(self, diameter, length, head_height):
         docName = App.ActiveDocument.Name
@@ -344,7 +346,6 @@ class KnobGenerator(QtWidgets.QWidget):
         self.line_number+=1
         alias = self.initialize_cell_link(self.spreadsheet, self.line_number, 'Flange Thinkness', str(height))
         getattr(App.getDocument(docName),obj_name).setExpression('Height', u'Sheet.'+ alias)
-
         return flange_shape
 
 
@@ -367,7 +368,6 @@ class KnobGenerator(QtWidgets.QWidget):
         self.line_number += 1
         alias = self.initialize_cell_link(self.spreadsheet, self.line_number, 'Nut Placement', str(-shank_length))
         nut_shape.setExpression('Placement.Base.z', u'Sheet.' + alias)
-
         return nut_shape
 
 
@@ -389,6 +389,7 @@ class KnobGenerator(QtWidgets.QWidget):
         alias = self.initialize_cell_link(self.spreadsheet, self.line_number, 'Bolt Head Placement', str(bolt_head_length/2))
         getattr(App.getDocument(docName), obj_name).setExpression('Placement.Base.z', u'Sheet.'+ alias)
         return nut_shape
+
 
     def make_carriage_bolt(self, knob_height, diameter):
         docName = App.ActiveDocument.Name
@@ -429,8 +430,8 @@ class KnobGenerator(QtWidgets.QWidget):
         self.line_number+=1
         alias = self.initialize_cell_link(self.spreadsheet, self.line_number, 'TNut Placement', str(-length))
         getattr(App.getDocument(docName), obj_name).setExpression('Placement.Base.z', u'Sheet.'+ alias)
-
         return nut_shape
+
 
     # Knurls 
 
@@ -482,12 +483,10 @@ class KnobGenerator(QtWidgets.QWidget):
         knurl_pos = self.get_circumradius(knob)
         if knurl_pos is None:
             return knob
-
         knob_circumference = 3.14 * (knurl_pos * 2)
         knurl_diameter = (knob_circumference / 2) / knurl_count
         step = int(360 / knurl_count)
         knurls = []  # List to store the Knurl objects
-
         for deg, count in zip(range(0, 360, step), range(0, knurl_count)):
             knurl = FreeCAD.ActiveDocument.addObject('Part::Cylinder', 'RoundKnurl')
             knurl.Height = knurl_height
@@ -499,7 +498,6 @@ class KnobGenerator(QtWidgets.QWidget):
             alias = self.initialize_cell_link(self.spreadsheet, self.line_number, 'Hex Knurl ' + str(count + 1) + ' Radius', str(knurl_diameter / 2))
             knurl.setExpression('Radius', u'Sheet.' + alias)  
             knob = self.cut_parts(knob, knurl, 'KnurlCut' + str(deg))
-
         return knob
 
     def make_hex_knurls(self, knob, knurl_count, knurl_height):
@@ -527,11 +525,11 @@ class KnobGenerator(QtWidgets.QWidget):
             knob = self.cut_parts(knob, knurl, 'KnurlCut'+ str(deg))
         return knob
 
+
     def get_alias_value(self, doc, alias):
             cell = doc.getCellFromAlias( alias)
             value = doc.getContents(cell)
             return value
-
 
 
     def initialize_cell_link(self, sheet, line_number, constraint_name, cell_formula):
@@ -562,7 +560,6 @@ class KnobGenerator(QtWidgets.QWidget):
             base_shape = App.ActiveDocument.addObject('Part::Cylinder', obj_name)
             base_shape.Radius = radius
             base_shape.Height = knob_height
-
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Knob Radius', str(radius))
             getattr(App.getDocument(docName),obj_name).setExpression('Radius', u'Sheet.'+alias)
             self.line_number+=1
@@ -576,14 +573,13 @@ class KnobGenerator(QtWidgets.QWidget):
             base_shape.Radius1 = radius
             base_shape.Radius2 = radius * 0.85
             base_shape.Height = knob_height
-
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Knob Bottom Radius', str(radius))
             getattr(App.getDocument(docName), obj_name).setExpression('Radius1', u'Sheet.'+ alias)
             self.line_number+=1
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Knob Top Radius', str(radius * 0.85))
             getattr(App.getDocument(docName), obj_name).setExpression('Radius2', u'Sheet.'+ alias)
             self.line_number+=1
-            alias = self.initialize_cell_link(spreadsheet, selfline_number, 'Knob Height', str(knob_height))
+            alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Knob Height', str(knob_height))
             getattr(App.getDocument(docName), obj_name).setExpression('Height', u'Sheet.'+ alias)
 
 
@@ -593,7 +589,6 @@ class KnobGenerator(QtWidgets.QWidget):
             base_shape = App.ActiveDocument.addObject('Part::Prism', obj_name)
             base_shape.Circumradius = radius
             base_shape.Height = knob_height
-
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Circumradius Radius', str(radius))
             getattr(App.getDocument(docName),obj_name).setExpression('Circumradius', u'Sheet.'+alias)
             self.line_number+=1
@@ -630,7 +625,6 @@ class KnobGenerator(QtWidgets.QWidget):
             base_shape1.Length = (radius * 2)/3
             base_shape1.Width = (radius * 2)
             base_shape1.Placement.Base = App.Vector(-dx/2, -dy/2, 0)
-
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Knob Radius', str(radius ))
             self.line_number+=1
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'DX',  '=((KnobRadius*2)/3 )' )
@@ -646,7 +640,6 @@ class KnobGenerator(QtWidgets.QWidget):
             self.line_number+=1
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Vertical Height',str( knob_height))
             getattr(App.getDocument(docName), obj_nameX).setExpression('Height', u'Sheet.'+ alias)
-
 
             obj_nameY = knob_shape + "_KnobX"      
             base_shape2 = App.ActiveDocument.addObject('Part::Box', obj_nameY)
@@ -671,7 +664,6 @@ class KnobGenerator(QtWidgets.QWidget):
             self.line_number+=1
             alias = self.initialize_cell_link(spreadsheet, self.line_number, 'Horizontal Placement', str(base_shape2.Placement.Base.y))
             getattr(App.getDocument(docName), obj_nameY).setExpression('Placement.Base.y', u'Sheet.'+ alias)
-
             base_shape = self.fuse_parts(base_shape1, base_shape2)
             base_shape.Refine = True
     
@@ -706,7 +698,6 @@ class KnobGenerator(QtWidgets.QWidget):
             base_shape = self.fuse_parts(base_shape1, base_shape2)
             #base_shape.refine = True
             base_shape.Placement.Base = App.Vector(0, -base_shape1.Ymax/6, 0)
-
         return base_shape
 
 
@@ -751,7 +742,6 @@ class KnobGenerator(QtWidgets.QWidget):
         doc = App.activeDocument()
         doc.addObject("Part::Feature", "Base")
         base = doc.Base
-
         bolt = self.bolt_radio.isChecked()
         bolt_type = self.bolt_type_combo.currentText()
         both = self.both_radio.isChecked()
@@ -770,12 +760,11 @@ class KnobGenerator(QtWidgets.QWidget):
         shank_diameter = self.shank_diameter_spin.value()
         shank_length = self.shank_length_spin.value()
         flange_height = knob_head_height * 0.25
-
         self.spreadsheet = App.ActiveDocument.addObject('Spreadsheet::Sheet', 'Sheet')
         knob_head = self.make_knob_head(knob_shape, knob_diameter/2, knob_head_height)
         #fillets = self.fillet_edges(knob_head, 3)
         #knob_head = fillets
-
+        
         if knurl_count > 0:
             if knurl_shape == 'Round':
                 knob_head =  self.make_round_knurls(knob_head, knurl_count, knob_head_height)
